@@ -1,0 +1,15 @@
+---
+name: HOP-Stream
+version: 0.01
+author:
+  - Curtis "Ovid" Poe <ovid@cpan.org>
+abstract: '"Higher Order Perl" streams'
+license: http://hop.perl.plover.com/Examples/LICENSE.txt
+requires:
+  Test::More: 0
+provides:
+  HOP::Stream:
+    file: lib/HOP/Stream.pm
+    version: 0.01
+generated_by: Module::Build version 0.2702
+MailingList: http://hop.perl.plover.com/~alias/list.cgi/2/
