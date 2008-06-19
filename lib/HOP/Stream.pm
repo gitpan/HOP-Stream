@@ -12,6 +12,7 @@ our @EXPORT_OK = qw(
   insert
   iterator_to_stream
   list_to_stream
+  append
   merge
   node
   promise
@@ -30,11 +31,11 @@ HOP::Stream - "Higher Order Perl" streams
 
 =head1 VERSION
 
-Version 0.01
+Version 0.02
 
 =cut
 
-our $VERSION = '0.01';
+our $VERSION = '0.02';
 
 =head1 SYNOPSIS
 
@@ -75,6 +76,8 @@ if you wish everything exported.
 
 =item * list_to_stream
 
+=item * append
+
 =item * merge
 
 =item * node
@@ -108,7 +111,7 @@ needed.
 
 sub node {
     my ( $h, $t ) = @_;
-    [ $h, $t ];
+    bless [ $h, $t ], __PACKAGE__;
 }
 
 ##############################################################################
@@ -124,6 +127,7 @@ returns the head.
 
 sub head {
     my ($s) = @_;
+    return undef unless is_node($s);
     $s->[0];
 }
 
@@ -139,10 +143,32 @@ Returns the I<tail> of a stream.
 
 sub tail {
     my ($s) = @_;
+    return undef unless is_node($s);
+    
     if ( is_promise( $s->[1] ) ) {
         $s->[1] = $s->[1]->();
     }
     $s->[1];
+}
+
+##############################################################################
+
+=head2 is_node
+
+  if ( is_node($tail) ) {
+     ...
+  }
+
+Returns true if the tail of a node is a node. Generally this function is
+used internally.
+
+=cut
+
+sub is_node {
+    # Note that this is *not* bad code.  Nodes aren't really objects.  They're
+    # merely being blessed to ensure that we can disambiguate them from array
+    # references.
+    UNIVERSAL::isa( $_[0], __PACKAGE__ );
 }
 
 ##############################################################################
@@ -284,6 +310,28 @@ sub merge {
 
 ##############################################################################
 
+=head2 append
+
+  my $merged_stream = append( $stream1, $stream2 );
+
+This function takes a list of streams and attaches them together head-to-tail
+into a new stream.
+
+=cut
+
+sub append {
+    my (@streams) = @_;
+
+    while (@streams) {
+        my $h = drop( $streams[0] );
+        return node( $h, promise { append(@streams) } ) if defined($h);
+        shift @streams;
+    }
+    return undef;
+}
+
+##############################################################################
+
 =head2 list_to_stream
 
   my $stream = list_to_stream(@list);
@@ -300,6 +348,8 @@ do this:
 
 sub list_to_stream {
     my $node = pop;
+    $node = node($node) unless is_node($node);    
+
     while (@_) {
         my $item = pop;
         $node = node( $item, $node );

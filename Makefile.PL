@@ -2,13 +2,13 @@
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
-  'NAME' => 'HOP::Stream',
-  'VERSION_FROM' => 'lib/HOP/Stream.pm',
-  'PREREQ_PM' => {
-    'Test::More' => '0'
-  },
-  'INSTALLDIRS' => 'site',
-  'EXE_FILES' => [],
-  'PL_FILES' => {}
-)
+          'NAME' => 'HOP::Stream',
+          'VERSION_FROM' => 'lib/HOP/Stream.pm',
+          'PREREQ_PM' => {
+                           'Test::More' => '0'
+                         },
+          'INSTALLDIRS' => 'site',
+          'EXE_FILES' => [],
+          'PL_FILES' => {}
+        )
 ;

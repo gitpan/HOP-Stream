@@ -2,8 +2,8 @@
 use warnings;
 use strict;
 
-#use Test::More tests => 21;
-use Test::More 'no_plan';
+use Test::More tests => 61;
+#use Test::More 'no_plan';
 
 use lib 'lib/', '../lib/';
 
@@ -19,6 +19,7 @@ my @exported = qw(
   insert
   iterator_to_stream
   list_to_stream
+  append
   merge
   node
   promise
@@ -110,6 +111,21 @@ for ( 1 .. 5 ) {
 is_deeply \@numbers, [ 2, 4, 6, 8, 10 ],
   '... which should return the numbers we expect';
 
+# append
+
+my $stream1 = upto(4, 7);
+my $stream2 = upto(12, 15);
+my $stream3 = upto(25, 28);
+ok $stream = append($stream1, $stream2, $stream3),
+  "append() should return a stream";
+
+@numbers = ();
+while ( defined( my $num = drop($stream) ) ) {
+    push @numbers, $num;
+}
+is_deeply \@numbers, [ 4..7, 12..15, 25..28 ],
+  '... and the stream should return all of the numbers';
+
 # merge
 
 sub scale {
@@ -168,6 +184,16 @@ while ( defined( my $num = drop($list) ) ) {
 }
 is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
 
+# list_to_stream, final node computed internally
+
+ok $list = list_to_stream( 1 .. 10 ),
+  'list_to_stream() should return a stream';
+@numbers = ();
+while ( defined( my $num = drop($list) ) ) {
+    push @numbers, $num;
+}
+is_deeply \@numbers, [ 1 .. 10 ], '... and create the numbers one to ten';
+
 # insert
 
 my @list = qw/seventeen three one/;                # sorted by descending length
@@ -176,3 +202,45 @@ insert @list, 'four', $compare;
 is_deeply \@list, [qw/seventeen three four one/],
   'insert() should be able to insert items according to our sort criteria';
 
+# 
+# streams of array refs do not work properly, because tail [a,b] is b, even if [a,b] is
+# the last stream element, and not a node
+# Solution: bless nodes, check is_node in head, tail, list_to_stream
+#
+$stream = list_to_stream( [A => 1], [B => 2] );
+is_deeply $stream, 
+  bless([ [A => 1], 
+          bless([ [B => 2], 
+                  undef ],
+              'HOP::Stream')],
+      'HOP::Stream'), "stream of array refs";
+is_deeply head($stream), [A => 1], "... head is array ref";
+is_deeply tail($stream), 
+  bless([ [B => 2], 
+          undef ],
+      'HOP::Stream'), "... tail is stream";
+
+drop($stream);
+is_deeply $stream, 
+  bless([ [B => 2], 
+          undef ],
+      'HOP::Stream'), "stream of array refs, dropped 1";
+is_deeply head($stream), [B => 2], "... head is array ref";
+is_deeply tail($stream), undef, "... tail is stream";
+
+drop($stream);
+is_deeply $stream, undef, "stream of array refs, dropped 2";
+is_deeply head($stream), undef, "... head is undef";
+is_deeply tail($stream), undef, "... tail is undef";
+
+drop($stream);
+is_deeply $stream, undef, "stream of array refs, dropped 3";
+is_deeply head($stream), undef, "... head is undef";
+is_deeply tail($stream), undef, "... tail is undef";
+
+# 
+# use a non-stream as stream
+#
+$stream = [1, [2, [3]]];
+is head($stream), undef, "no head of non-stream";
+is tail($stream), undef, "no head of non-stream";
