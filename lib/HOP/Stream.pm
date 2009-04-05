@@ -10,6 +10,7 @@ our @EXPORT_OK = qw(
   filter
   head
   insert
+  is_node
   iterator_to_stream
   list_to_stream
   append
@@ -31,11 +32,11 @@ HOP::Stream - "Higher Order Perl" streams
 
 =head1 VERSION
 
-Version 0.02
+Version 0.03
 
 =cut
 
-our $VERSION = '0.02';
+our $VERSION = '0.03';
 
 =head1 SYNOPSIS
 
@@ -120,8 +121,7 @@ sub node {
 
   my $head = head( $node );
 
-This function removes the head of the stream, modifying it in-place, and
-returns the head.
+This function returns the head of a stream.
 
 =cut
 
@@ -476,6 +476,11 @@ Morgan Kaufmann Publishers, Copyright 2005 by Elsevier Inc.
 All Software (code listings) presented in the book can be found on the
 companion website for the book (http://perl.plover.com/hop/) and is
 subject to the License agreements below.
+
+=head1 LATEST VERSION
+
+You can download the latest versions of these modules at
+L<http://github.com/Ovid/hop/>.  Feel free to fork and make changes.
 
 =head1 ELSEVIER SOFTWARE LICENSE AGREEMENT
 
